@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Role brukes som String i SQLite. Gyldige verdier: "ADMIN", "SELLER"
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("SELLER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Besparelsesparametere for regnskap og forsikring
+model SavingsSettings {
+  id                   String   @id @default(cuid())
+  accountingPercentage Float    @default(20)
+  insurancePercentage  Float    @default(10)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// Strømleverandører – isOurOffer = true markerer Telemark Kraft som vår tilbudsside
+model ElectricityProvider {
+  id         String            @id @default(cuid())
+  name       String
+  isOurOffer Boolean           @default(false)
+  active     Boolean           @default(true)
+  sortOrder  Int               @default(0)
+  plans      ElectricityPlan[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+}
+
+model ElectricityPlan {
+  id          String              @id @default(cuid())
+  name        String              // Avtalenavnet, f.eks. "Spot Næring"
+  fixedAmount Float               // Fastledd kr/mnd
+  markup      Float               // Påslag øre/kWh
+  providerId  String
+  provider    ElectricityProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  active      Boolean             @default(true)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+// Telefonimodul: leverandører og abonnementer
+// isOurOffer = true markerer SMB Mobil som sammenligningsprovider
+model PhoneProvider {
+  id         String      @id @default(cuid())
+  name       String
+  isOurOffer Boolean     @default(false)
+  active     Boolean     @default(true)
+  sortOrder  Int         @default(0)
+  plans      PhonePlan[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// dataGB = -1 betyr "Fri bruk" (ubegrenset data)
+model PhonePlan {
+  id          String        @id @default(cuid())
+  label       String
+  dataGB      Int
+  pricePerSub Float
+  providerId  String
+  provider    PhoneProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  active      Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; Set-Location \"C:\\\\Users\\\\atleh\\\\Documents\\\\GitHub\\\\calc_test\"; npm install 2>&1 | Select-Object -Last 15)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; Set-Location \"C:\\\\Users\\\\atleh\\\\Documents\\\\GitHub\\\\calc_test\"; npm install next@latest 2>&1 | Select-Object -Last 5)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; Set-Location \"C:\\\\Users\\\\atleh\\\\Documents\\\\GitHub\\\\calc_test\"; node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;\" + $env:PATH; Set-Location \"C:\\\\Users\\\\atleh\\\\Documents\\\\GitHub\\\\calc_test\"; node -e \"const p = require\\('./node_modules/react/package.json'\\); console.log\\('React:', p.version\\)\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\nodejs\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:APPDATA\\\\npm\" -ErrorAction SilentlyContinue | Select-Object -First 5; Get-ChildItem \"$env:NVM_HOME\" -ErrorAction SilentlyContinue | Select-Object -First 5)"
+    ]
+  }
+}
