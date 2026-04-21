@@ -3,11 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Role brukes som String i SQLite. Gyldige verdier: "ADMIN", "SELLER"
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
