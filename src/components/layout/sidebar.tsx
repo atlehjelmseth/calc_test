@@ -10,8 +10,8 @@ import {
   ChevronRight,
   Users,
   Eye,
-  LayoutGrid,
 } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const navItems = [
   {
@@ -63,14 +63,7 @@ export function Sidebar({ onPreview }: SidebarProps) {
     <aside className="w-56 bg-white border-r border-slate-200 min-h-screen flex flex-col flex-shrink-0 shadow-sm">
       {/* Logo */}
       <div className="px-5 py-4 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <LayoutGrid className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-slate-900 text-[15px] tracking-tight">
-            Prismatch
-          </span>
-        </div>
+        <Logo className="h-[22px] w-auto" />
       </div>
 
       {/* Navigasjon */}
