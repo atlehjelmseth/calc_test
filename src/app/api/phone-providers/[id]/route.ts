@@ -21,11 +21,24 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Ugyldig data" }, { status: 400 });
 
-  const provider = await db.phoneProvider.update({
-    where: { id },
-    data: parsed.data,
-    include: { plans: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
-  });
+  let provider;
+  if (parsed.data.isOurOffer === true) {
+    // Atomic swap: clear old offer first, then set new one
+    await db.$transaction([
+      db.phoneProvider.updateMany({ where: { isOurOffer: true }, data: { isOurOffer: false } }),
+      db.phoneProvider.update({ where: { id }, data: parsed.data }),
+    ]);
+    provider = await db.phoneProvider.findUnique({
+      where: { id },
+      include: { plans: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
+    });
+  } else {
+    provider = await db.phoneProvider.update({
+      where: { id },
+      data: parsed.data,
+      include: { plans: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
+    });
+  }
 
   return NextResponse.json(provider);
 }

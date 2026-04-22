@@ -130,6 +130,7 @@ function ProviderBlock({
   onDeletePlan,
   onAddPlan,
   onDeleteProvider,
+  onSetOurOffer,
   onRefresh,
 }: {
   provider: PhoneProviderData;
@@ -137,6 +138,7 @@ function ProviderBlock({
   onDeletePlan: (planId: string) => Promise<void>;
   onAddPlan: (providerId: string, label: string, dataGB: number, price: number) => Promise<void>;
   onDeleteProvider: (providerId: string) => Promise<void>;
+  onSetOurOffer: (providerId: string) => Promise<void>;
   onRefresh: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -176,13 +178,22 @@ function ProviderBlock({
             <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
           )}
           <span className="font-semibold text-slate-800 text-sm">{provider.name}</span>
-          {provider.isOurOffer && (
-            <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+          {provider.isOurOffer ? (
+            <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex-shrink-0">
               <Star className="w-2.5 h-2.5" />
               Vår tilbudsside
             </span>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSetOurOffer(provider.id); }}
+              className="flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-green-700 hover:bg-green-50 text-xs font-medium rounded-full border border-dashed border-slate-300 hover:border-green-300 transition-colors flex-shrink-0"
+              title="Sett som vår tilbudsside"
+            >
+              <Star className="w-2.5 h-2.5" />
+              Sett som vår tilbudsside
+            </button>
           )}
-          <span className="text-xs text-slate-400 ml-auto mr-3">
+          <span className="text-xs text-slate-400 ml-auto mr-3 flex-shrink-0">
             {provider.plans.length} abonnementer
           </span>
         </div>
@@ -351,6 +362,17 @@ export function PhoneAdmin({ initialProviders }: { initialProviders: PhoneProvid
     await refresh();
   }
 
+  async function handleSetOurOffer(providerId: string) {
+    setGlobalError("");
+    const res = await fetch(`/api/phone-providers/${providerId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isOurOffer: true }),
+    });
+    if (!res.ok) { setGlobalError("Kunne ikke oppdatere tilbudsside"); return; }
+    await refresh();
+  }
+
   async function handleAddProvider() {
     if (!newProviderName.trim()) return;
     setGlobalError("");
@@ -394,6 +416,7 @@ export function PhoneAdmin({ initialProviders }: { initialProviders: PhoneProvid
             onDeletePlan={handleDeletePlan}
             onAddPlan={handleAddPlan}
             onDeleteProvider={handleDeleteProvider}
+            onSetOurOffer={handleSetOurOffer}
             onRefresh={refresh}
           />
         ))}
