@@ -142,11 +142,11 @@ function CustomRow({
           <div className="flex items-center gap-1 flex-shrink-0">
             <div className="relative w-16">
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={sub.dataGB}
                 onChange={(e) => onChange({ ...sub, dataGB: e.target.value })}
                 placeholder="0"
-                min={0}
                 className="w-full text-sm px-2 py-1.5 pr-6 border border-slate-200 rounded-lg bg-white text-slate-800
                   focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
               />
@@ -165,11 +165,11 @@ function CustomRow({
         {/* Price */}
         <div className="relative flex-1 min-w-0">
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             value={sub.pricePerSub}
             onChange={(e) => onChange({ ...sub, pricePerSub: e.target.value })}
             placeholder="Pris"
-            min={0}
             className="w-full text-sm px-2 py-1.5 pr-7 border border-slate-200 rounded-lg bg-white text-slate-800
               focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
           />
