@@ -7,10 +7,12 @@ import {
   Shield,
   TrendingDown,
   RefreshCw,
+  Eye,
 } from "lucide-react";
 import { PhoneCard } from "@/components/calculator/phone-card";
 import { ElectricityCard } from "@/components/calculator/electricity-card";
 import { formatNOK } from "@/lib/calculations";
+import { usePreview } from "@/components/layout/dashboard-shell";
 
 interface Settings {
   accountingPercentage: number;
@@ -298,6 +300,7 @@ function SummaryCard({
 }
 
 export default function CalculatorPage() {
+  const preview = usePreview();
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
 
@@ -339,13 +342,22 @@ export default function CalculatorPage() {
   );
 
   return (
-    <div className="p-6 max-w-[1400px]">
+    <div className="p-6 max-w-[1400px] mx-auto w-full">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <Calculator className="w-5 h-5 text-blue-600" />
           <h1 className="text-xl font-bold text-slate-900">Besparelseskalkulator</h1>
           {isLoadingSettings && (
             <RefreshCw className="w-4 h-4 text-slate-400 animate-spin ml-1" />
+          )}
+          {preview && (
+            <button
+              onClick={preview.startPreview}
+              className="ml-auto flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Se som selger
+            </button>
           )}
         </div>
         <p className="text-sm text-slate-500">

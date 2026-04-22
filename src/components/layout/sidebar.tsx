@@ -9,7 +9,6 @@ import {
   LogOut,
   ChevronRight,
   Users,
-  Eye,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
@@ -34,11 +33,7 @@ const navItems = [
   },
 ];
 
-interface SidebarProps {
-  onPreview?: () => void;
-}
-
-export function Sidebar({ onPreview }: SidebarProps) {
+export function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const userRole = session?.user?.role ?? "SELLER";
@@ -60,14 +55,14 @@ export function Sidebar({ onPreview }: SidebarProps) {
   const roleLabel = userRole === "ADMIN" ? "Administrator" : "Selger";
 
   return (
-    <aside className="w-56 bg-white border-r border-slate-200 min-h-screen flex flex-col flex-shrink-0 shadow-sm">
+    <aside className="w-56 bg-white border-r border-slate-200 h-full flex flex-col flex-shrink-0 shadow-sm">
       {/* Logo */}
-      <div className="px-5 py-4 border-b border-slate-100">
+      <div className="px-5 py-4 border-b border-slate-100 flex-shrink-0">
         <Logo className="h-[22px] w-auto" />
       </div>
 
-      {/* Navigasjon */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5">
+      {/* Navigasjon — scrollable so long nav lists don't push footer off screen */}
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-widest px-3 mb-2">
           Meny
         </p>
@@ -93,8 +88,8 @@ export function Sidebar({ onPreview }: SidebarProps) {
         })}
       </nav>
 
-      {/* Brukerinfo + handlinger */}
-      <div className="px-3 py-3 border-t border-slate-100 space-y-0.5">
+      {/* Brukerinfo + handlinger — always pinned to bottom */}
+      <div className="px-3 py-3 border-t border-slate-100 space-y-0.5 flex-shrink-0">
         {/* Brukerinfo */}
         <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
           <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -107,17 +102,6 @@ export function Sidebar({ onPreview }: SidebarProps) {
             <p className="text-xs text-slate-400">{roleLabel}</p>
           </div>
         </div>
-
-        {/* Se som selger (kun admin) */}
-        {onPreview && (
-          <button
-            onClick={onPreview}
-            className="w-full flex items-center gap-3 text-slate-600 hover:text-slate-900 text-sm font-medium px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-all duration-150"
-          >
-            <Eye className="w-4 h-4 flex-shrink-0" />
-            <span>Se som selger</span>
-          </button>
-        )}
 
         {/* Logg ut */}
         <button
