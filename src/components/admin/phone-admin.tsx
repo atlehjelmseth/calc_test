@@ -178,20 +178,11 @@ function ProviderBlock({
             <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
           )}
           <span className="font-semibold text-slate-800 text-sm">{provider.name}</span>
-          {provider.isOurOffer ? (
+          {provider.isOurOffer && (
             <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex-shrink-0">
               <Star className="w-2.5 h-2.5" />
-              Vår tilbudsside
+              Vår referanseavtale
             </span>
-          ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); onSetOurOffer(provider.id); }}
-              className="flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-green-700 hover:bg-green-50 text-xs font-medium rounded-full border border-dashed border-slate-300 hover:border-green-300 transition-colors flex-shrink-0"
-              title="Sett som vår tilbudsside"
-            >
-              <Star className="w-2.5 h-2.5" />
-              Sett som vår tilbudsside
-            </button>
           )}
           <span className="text-xs text-slate-400 ml-auto mr-3 flex-shrink-0">
             {provider.plans.length} abonnementer
@@ -228,6 +219,16 @@ function ProviderBlock({
                 />
               ))}
             </div>
+          )}
+
+          {!provider.isOurOffer && (
+            <button
+              onClick={() => onSetOurOffer(provider.id)}
+              className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 hover:text-green-700 font-medium px-2 py-1 rounded-lg hover:bg-green-50 transition-colors border border-dashed border-slate-300 hover:border-green-300"
+            >
+              <Star className="w-3 h-3" />
+              Sett som vår referanseavtale
+            </button>
           )}
 
           {/* Legg til nytt abonnement */}
