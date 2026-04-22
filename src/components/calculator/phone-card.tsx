@@ -250,26 +250,34 @@ export function PhoneCard({ onSavings }: PhoneCardProps) {
   const smbPlans = useMemo(() => providers.find((p) => p.isOurOffer)?.plans ?? [], [providers]);
 
   const totalMonthlySavings = useMemo(() => {
-    let total = 0;
+    let totalCustomer = 0;
+    let totalSMB = 0;
+
     for (const sub of subs) {
       if (sub.type === "preset") {
-        const plan = providers.find((p) => p.id === sub.providerId)?.plans.find((pl) => pl.id === sub.planId);
+        const plan = providers
+          .find((p) => p.id === sub.providerId)
+          ?.plans.find((pl) => pl.id === sub.planId);
         if (!plan) continue;
         const smbMatch = findSMBMatch(plan, smbPlans);
         if (!smbMatch) continue;
-        total += Math.max(0, plan.pricePerSub - smbMatch.pricePerSub) * sub.quantity;
+        totalCustomer += plan.pricePerSub * sub.quantity;
+        totalSMB += smbMatch.pricePerSub * sub.quantity;
       } else {
         const price = parseNum(sub.pricePerSub);
         if (price === 0) continue;
         const dataGB = sub.fribruk ? -1 : parseNum(sub.dataGB) || 0;
-        // Build a pseudo-plan to find the SMB match
         const pseudoPlan: PhonePlanData = { id: "custom", label: sub.name, dataGB, pricePerSub: price, sortOrder: 0 };
         const smbMatch = findSMBMatch(pseudoPlan, smbPlans);
         if (!smbMatch) continue;
-        total += Math.max(0, price - smbMatch.pricePerSub) * sub.quantity;
+        totalCustomer += price * sub.quantity;
+        totalSMB += smbMatch.pricePerSub * sub.quantity;
       }
     }
-    return total;
+
+    // Single clamp across all lines: a cheaper-than-SMB line correctly offsets
+    // savings from other lines rather than being silently dropped
+    return Math.max(0, totalCustomer - totalSMB);
   }, [subs, providers, smbPlans]);
 
   useEffect(() => {
