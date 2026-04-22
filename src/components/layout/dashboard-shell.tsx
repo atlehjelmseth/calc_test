@@ -73,8 +73,14 @@ interface DashboardShellProps {
   isAdmin: boolean;
 }
 
-export function DashboardShell({ children, isAdmin }: DashboardShellProps) {
+export function DashboardShell({ children, isAdmin: serverIsAdmin }: DashboardShellProps) {
+  const { data: session, status } = useSession();
   const [previewMode, setPreviewMode] = useState(false);
+
+  // Once the client session is confirmed, use it — overrides any bfcache-restored
+  // server prop from a previous session (e.g. admin navigating back as a seller)
+  const isAdmin =
+    status === "authenticated" ? session?.user?.role === "ADMIN" : serverIsAdmin;
 
   // Sellers: top bar with logo + user info + logout, content centered
   if (!isAdmin) {
