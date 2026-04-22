@@ -9,6 +9,7 @@ import {
   LogOut,
   TrendingDown,
   ChevronRight,
+  Users,
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +23,12 @@ const navItems = [
     href: "/admin",
     label: "Administrasjon",
     icon: Settings2,
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/admin/users",
+    label: "Brukere",
+    icon: Users,
     roles: ["ADMIN"],
   },
 ];
