@@ -114,57 +114,53 @@ function CustomRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 px-3 py-2.5 space-y-2">
-      {/* Name row */}
-      <div className="flex items-center gap-2">
-        <PenLine className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 p-2.5 space-y-2">
+      {/* Row 1: name */}
+      <div className="flex items-center gap-1.5">
+        <PenLine className="w-3 h-3 text-slate-400 flex-shrink-0" />
         <input
           type="text"
           value={sub.name}
           onChange={(e) => onChange({ ...sub, name: e.target.value })}
           placeholder="Navn på abonnement"
-          className="flex-1 text-sm px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white text-slate-800 placeholder-slate-400
-            focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 min-w-0"
+          className="flex-1 min-w-0 text-sm px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white text-slate-800 placeholder-slate-400
+            focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
         />
-        <button onClick={onRemove} className="p-1 text-slate-300 hover:text-red-400 transition-colors flex-shrink-0">
-          <Trash2 className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* GB + price + qty row */}
-      <div className="flex items-center gap-2 pl-5">
+      {/* Row 2: GB | price | qty | trash */}
+      <div className="flex items-center gap-2">
         {/* GB / Fri bruk */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {sub.fribruk ? (
-            <button
-              onClick={() => onChange({ ...sub, fribruk: false, dataGB: "" })}
-              className="text-xs font-medium px-2.5 py-1.5 bg-green-100 text-green-700 rounded-lg border border-green-200 hover:bg-green-200 transition-colors whitespace-nowrap"
-            >
-              Fri bruk ✕
-            </button>
-          ) : (
-            <div className="flex items-center gap-1">
-              <div className="relative w-20">
-                <input
-                  type="number"
-                  value={sub.dataGB}
-                  onChange={(e) => onChange({ ...sub, dataGB: e.target.value })}
-                  placeholder="GB"
-                  min={0}
-                  className="w-full text-sm px-2 py-1.5 pr-7 border border-slate-200 rounded-lg bg-white text-slate-800
-                    focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">GB</span>
-              </div>
-              <button
-                onClick={() => onChange({ ...sub, fribruk: true, dataGB: "" })}
-                className="text-xs text-slate-400 hover:text-green-600 px-2 py-1.5 rounded-lg hover:bg-green-50 transition-colors whitespace-nowrap border border-dashed border-slate-200 hover:border-green-300"
-              >
-                Fri bruk
-              </button>
+        {sub.fribruk ? (
+          <button
+            onClick={() => onChange({ ...sub, fribruk: false, dataGB: "" })}
+            className="flex-shrink-0 text-xs font-medium px-2 py-1.5 bg-green-100 text-green-700 rounded-lg border border-green-200 hover:bg-green-200 transition-colors whitespace-nowrap"
+          >
+            Fri bruk ✕
+          </button>
+        ) : (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="relative w-16">
+              <input
+                type="number"
+                value={sub.dataGB}
+                onChange={(e) => onChange({ ...sub, dataGB: e.target.value })}
+                placeholder="0"
+                min={0}
+                className="w-full text-sm px-2 py-1.5 pr-6 border border-slate-200 rounded-lg bg-white text-slate-800
+                  focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+              />
+              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">GB</span>
             </div>
-          )}
-        </div>
+            <button
+              onClick={() => onChange({ ...sub, fribruk: true, dataGB: "" })}
+              title="Fri bruk"
+              className="text-base text-slate-400 hover:text-green-600 w-6 h-7 flex items-center justify-center rounded hover:bg-green-50 transition-colors"
+            >
+              ∞
+            </button>
+          </div>
+        )}
 
         {/* Price */}
         <div className="relative flex-1 min-w-0">
@@ -174,13 +170,17 @@ function CustomRow({
             onChange={(e) => onChange({ ...sub, pricePerSub: e.target.value })}
             placeholder="Pris"
             min={0}
-            className="w-full text-sm px-2.5 py-1.5 pr-14 border border-slate-200 rounded-lg bg-white text-slate-800
+            className="w-full text-sm px-2 py-1.5 pr-7 border border-slate-200 rounded-lg bg-white text-slate-800
               focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
           />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">kr/mnd</span>
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">kr</span>
         </div>
 
         <QuantityStepper value={sub.quantity} onChange={(q) => onChange({ ...sub, quantity: q })} />
+
+        <button onClick={onRemove} className="p-1 text-slate-300 hover:text-red-400 transition-colors flex-shrink-0">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
