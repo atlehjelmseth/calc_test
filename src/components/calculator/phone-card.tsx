@@ -163,20 +163,20 @@ function CustomRow({
         )}
 
         {/* Price */}
-        <div className="relative flex-1 min-w-0">
+        <div className="flex items-center gap-1 flex-1 min-w-0">
           <input
             type="text"
             inputMode="decimal"
             value={sub.pricePerSub}
             onChange={(e) => onChange({ ...sub, pricePerSub: e.target.value })}
             placeholder="Pris"
-            className="w-full text-sm px-2 py-1.5 pr-7 border border-slate-200 rounded-lg bg-white text-slate-800
+            className="flex-1 min-w-0 text-sm px-2 py-1.5 border border-slate-200 rounded-lg bg-white text-slate-800
               focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
           />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">kr</span>
+          <span className="text-xs text-slate-400 flex-shrink-0">kr</span>
         </div>
 
-        <QuantityStepper value={sub.quantity} onChange={(q) => onChange({ ...sub, quantity: q })} />
+        <SmallQuantityStepper value={sub.quantity} onChange={(q) => onChange({ ...sub, quantity: q })} />
 
         <button onClick={onRemove} className="p-1 text-slate-300 hover:text-red-400 transition-colors flex-shrink-0">
           <Trash2 className="w-3.5 h-3.5" />
@@ -186,7 +186,7 @@ function CustomRow({
   );
 }
 
-// ── Shared quantity stepper ──────────────────────────────────────────────────
+// ── Shared quantity steppers ─────────────────────────────────────────────────
 
 function QuantityStepper({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   return (
@@ -201,6 +201,26 @@ function QuantityStepper({ value, onChange }: { value: number; onChange: (n: num
       <button
         onClick={() => onChange(value + 1)}
         className="px-2.5 py-2 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors text-sm font-bold"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
+function SmallQuantityStepper({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  return (
+    <div className="flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden flex-shrink-0">
+      <button
+        onClick={() => onChange(Math.max(1, value - 1))}
+        className="px-1.5 py-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors text-xs font-bold"
+      >
+        −
+      </button>
+      <span className="w-5 text-center text-xs font-semibold text-slate-800 tabular-nums">{value}</span>
+      <button
+        onClick={() => onChange(value + 1)}
+        className="px-1.5 py-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors text-xs font-bold"
       >
         +
       </button>
