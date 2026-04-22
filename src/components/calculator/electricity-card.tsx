@@ -17,9 +17,11 @@ function parseNum(val: string): number {
 
 interface ElectricityCardProps {
   onSavings: (monthly: number, yearly: number) => void;
+  hideResults?: boolean;
+  onHasData?: (has: boolean) => void;
 }
 
-export function ElectricityCard({ onSavings }: ElectricityCardProps) {
+export function ElectricityCard({ onSavings, hideResults, onHasData }: ElectricityCardProps) {
   const [providers, setProviders] = useState<ElectricityProviderData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [annualKwh, setAnnualKwh] = useState("");
@@ -68,6 +70,10 @@ export function ElectricityCard({ onSavings }: ElectricityCardProps) {
   useEffect(() => {
     onSavings(savings.monthly, savings.yearly);
   }, [savings, onSavings]);
+
+  useEffect(() => {
+    onHasData?.(annualKwh !== "");
+  }, [annualKwh, onHasData]);
 
   const handleProviderChange = useCallback((newProviderId: string) => {
     setProviderId(newProviderId);
@@ -216,31 +222,33 @@ export function ElectricityCard({ onSavings }: ElectricityCardProps) {
       )}
 
       {/* Besparelsesoppsummering */}
-      <div
-        className={`rounded-lg p-3 mt-3 transition-all duration-300 ${
-          hasSavings
-            ? "bg-emerald-50 border border-emerald-100"
-            : "bg-slate-50 border border-slate-100"
-        }`}
-      >
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-          Estimert besparelse
-        </p>
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs text-slate-500 mb-0.5">Per måned</p>
-            <p className={`text-lg font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
-              {hasSavings ? formatNOK(savings.monthly) : "0,-"}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-slate-500 mb-0.5">Per år</p>
-            <p className={`text-2xl font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
-              {hasSavings ? formatNOK(savings.yearly) : "0,-"}
-            </p>
+      {!hideResults && (
+        <div
+          className={`rounded-lg p-3 mt-3 transition-all duration-300 ${
+            hasSavings
+              ? "bg-emerald-50 border border-emerald-100"
+              : "bg-slate-50 border border-slate-100"
+          }`}
+        >
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            Estimert besparelse
+          </p>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs text-slate-500 mb-0.5">Per måned</p>
+              <p className={`text-lg font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
+                {hasSavings ? formatNOK(savings.monthly) : "0,-"}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-slate-500 mb-0.5">Per år</p>
+              <p className={`text-2xl font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
+                {hasSavings ? formatNOK(savings.yearly) : "0,-"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

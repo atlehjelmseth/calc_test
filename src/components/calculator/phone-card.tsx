@@ -232,9 +232,11 @@ function SmallQuantityStepper({ value, onChange }: { value: number; onChange: (n
 
 interface PhoneCardProps {
   onSavings: (monthly: number, yearly: number) => void;
+  hideResults?: boolean;
+  onHasData?: (has: boolean) => void;
 }
 
-export function PhoneCard({ onSavings }: PhoneCardProps) {
+export function PhoneCard({ onSavings, hideResults, onHasData }: PhoneCardProps) {
   const [providers, setProviders] = useState<PhoneProviderData[]>([]);
   const [subs, setSubs] = useState<AnySub[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -283,6 +285,10 @@ export function PhoneCard({ onSavings }: PhoneCardProps) {
   useEffect(() => {
     onSavings(totalMonthlySavings, totalMonthlySavings * 12);
   }, [totalMonthlySavings, onSavings]);
+
+  useEffect(() => {
+    onHasData?.(subs.length > 0);
+  }, [subs.length, onHasData]);
 
   const addPreset = useCallback(() => setSubs((prev) => [...prev, newPresetSub()]), []);
   const addCustom = useCallback(() => setSubs((prev) => [...prev, newCustomSub()]), []);
@@ -384,29 +390,31 @@ export function PhoneCard({ onSavings }: PhoneCardProps) {
       )}
 
       {/* Besparelsesoppsummering */}
-      <div
-        className={`rounded-lg p-3 mt-3 transition-all duration-300 ${
-          hasSavings ? "bg-emerald-50 border border-emerald-100" : "bg-slate-50 border border-slate-100"
-        }`}
-      >
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-          Estimert besparelse
-        </p>
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs text-slate-500 mb-0.5">Per måned</p>
-            <p className={`text-lg font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
-              {hasSavings ? formatNOK(totalMonthlySavings) : "0,-"}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-slate-500 mb-0.5">Per år</p>
-            <p className={`text-2xl font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
-              {hasSavings ? formatNOK(totalMonthlySavings * 12) : "0,-"}
-            </p>
+      {!hideResults && (
+        <div
+          className={`rounded-lg p-3 mt-3 transition-all duration-300 ${
+            hasSavings ? "bg-emerald-50 border border-emerald-100" : "bg-slate-50 border border-slate-100"
+          }`}
+        >
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            Estimert besparelse
+          </p>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs text-slate-500 mb-0.5">Per måned</p>
+              <p className={`text-lg font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
+                {hasSavings ? formatNOK(totalMonthlySavings) : "0,-"}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-slate-500 mb-0.5">Per år</p>
+              <p className={`text-2xl font-bold tabular-nums ${hasSavings ? "text-emerald-600" : "text-slate-300"}`}>
+                {hasSavings ? formatNOK(totalMonthlySavings * 12) : "0,-"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   LogOut,
   ChevronRight,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
@@ -18,6 +19,12 @@ const navItems = [
     label: "Kalkulator",
     icon: Calculator,
     roles: ["ADMIN", "SELLER"],
+  },
+  {
+    href: "/demo",
+    label: "Demo-kalkulator",
+    icon: Sparkles,
+    roles: ["ADMIN"],
   },
   {
     href: "/admin",
