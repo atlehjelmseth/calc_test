@@ -65,10 +65,12 @@ model PhoneProvider {
 }
 
 // dataGB = -1 betyr "Fri bruk" (ubegrenset data)
+// isExtraSim = true means this product is an Extra SIM (no data, matched by isExtraSim flag)
 model PhonePlan {
   id          String        @id @default(cuid())
   label       String
   dataGB      Int
+  isExtraSim  Boolean       @default(false)
   pricePerSub Float
   providerId  String
   provider    PhoneProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)

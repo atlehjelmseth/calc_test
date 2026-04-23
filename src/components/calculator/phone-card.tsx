@@ -241,6 +241,7 @@ export function PhoneCard({ onSavings, hideResults, onHasData }: PhoneCardProps)
   const [subs, setSubs] = useState<AnySub[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+
   useEffect(() => {
     fetch("/api/phone-providers")
       .then((r) => r.json())
@@ -269,7 +270,7 @@ export function PhoneCard({ onSavings, hideResults, onHasData }: PhoneCardProps)
         const price = parseNum(sub.pricePerSub);
         if (price === 0) continue;
         const dataGB = sub.fribruk ? -1 : parseNum(sub.dataGB) || 0;
-        const pseudoPlan: PhonePlanData = { id: "custom", label: sub.name, dataGB, pricePerSub: price, sortOrder: 0 };
+        const pseudoPlan: PhonePlanData = { id: "custom", label: sub.name, dataGB, isExtraSim: false, pricePerSub: price, sortOrder: 0 };
         const smbMatch = findSMBMatch(pseudoPlan, smbPlans);
         if (!smbMatch) continue;
         totalCustomer += price * sub.quantity;

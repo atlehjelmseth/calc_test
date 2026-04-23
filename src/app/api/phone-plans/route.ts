@@ -7,7 +7,8 @@ import { z } from "zod";
 const createPlanSchema = z.object({
   providerId: z.string().min(1),
   label: z.string().min(1).max(50),
-  dataGB: z.number().int().min(-1), // -1 = Fri bruk
+  dataGB: z.number().int().min(-1),       // -1 = Fri bruk; 0 when isExtraSim
+  isExtraSim: z.boolean().default(false),
   pricePerSub: z.number().min(0),
 });
 

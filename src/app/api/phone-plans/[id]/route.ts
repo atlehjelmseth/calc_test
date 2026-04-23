@@ -7,6 +7,7 @@ import { z } from "zod";
 const updateSchema = z.object({
   label: z.string().min(1).max(50).optional(),
   dataGB: z.number().int().min(-1).optional(),
+  isExtraSim: z.boolean().optional(),
   pricePerSub: z.number().min(0).optional(),
   active: z.boolean().optional(),
 });

@@ -1,7 +1,8 @@
 export interface PhonePlanData {
   id: string;
   label: string;
-  dataGB: number; // -1 = Fri bruk
+  dataGB: number;      // -1 = Fri bruk; ignored when isExtraSim = true
+  isExtraSim: boolean; // true = Ekstra SIM product — matched by flag, not GB
   pricePerSub: number;
   sortOrder: number;
 }
@@ -15,25 +16,31 @@ export interface PhoneProviderData {
   plans: PhonePlanData[];
 }
 
-// Finn det minste SMB-abonnementet som dekker kundens GB-behov.
-// Regel: bruk minst mulig besparelse → velg SMB-plan med lavest GB >= kundens GB.
-// Hvis kunden har Fri bruk: sammenlign mot SMB Fri bruk.
+// Find the reference (SMB) plan that corresponds to the customer's plan.
+// Ekstra SIM: match against the reference provider's Ekstra SIM plan.
+// Fri bruk:   match against the reference provider's Fri bruk plan.
+// Normal GB:  match against the smallest reference plan that covers the customer's GB.
 export function findSMBMatch(
   customerPlan: PhonePlanData,
   smbPlans: PhonePlanData[]
 ): PhonePlanData | null {
-  if (customerPlan.dataGB === -1) {
-    return smbPlans.find((p) => p.dataGB === -1) ?? null;
+  if (customerPlan.isExtraSim) {
+    return smbPlans.find((p) => p.isExtraSim) ?? null;
   }
 
-  // Sorter SMB-planer stigende på GB, Fri bruk sist
-  const sorted = [...smbPlans].sort((a, b) => {
-    if (a.dataGB === -1) return 1;
-    if (b.dataGB === -1) return -1;
-    return a.dataGB - b.dataGB;
-  });
+  if (customerPlan.dataGB === -1) {
+    return smbPlans.find((p) => p.dataGB === -1 && !p.isExtraSim) ?? null;
+  }
 
-  // Finn minste plan som dekker kundens GB
+  // Sort SMB plans ascending by GB (Fri bruk and Ekstra SIM last)
+  const sorted = [...smbPlans]
+    .filter((p) => !p.isExtraSim)
+    .sort((a, b) => {
+      if (a.dataGB === -1) return 1;
+      if (b.dataGB === -1) return -1;
+      return a.dataGB - b.dataGB;
+    });
+
   for (const plan of sorted) {
     if (plan.dataGB === -1 || plan.dataGB >= customerPlan.dataGB) {
       return plan;
@@ -45,8 +52,8 @@ export function findSMBMatch(
 
 export interface PhoneLineSavings {
   smbMatch: PhonePlanData | null;
-  savingsPerSub: number;      // kr/mnd per abonnement
-  totalMonthlySavings: number; // savingsPerSub × antall
+  savingsPerSub: number;
+  totalMonthlySavings: number;
 }
 
 export function calculatePhoneLineSavings(
@@ -55,17 +62,8 @@ export function calculatePhoneLineSavings(
   smbPlans: PhonePlanData[]
 ): PhoneLineSavings {
   const smbMatch = findSMBMatch(customerPlan, smbPlans);
+  if (!smbMatch) return { smbMatch: null, savingsPerSub: 0, totalMonthlySavings: 0 };
 
-  if (!smbMatch) {
-    return { smbMatch: null, savingsPerSub: 0, totalMonthlySavings: 0 };
-  }
-
-  // Hvis SMB er dyrere enn kundens plan: besparelse = 0
   const savingsPerSub = Math.max(0, customerPlan.pricePerSub - smbMatch.pricePerSub);
-
-  return {
-    smbMatch,
-    savingsPerSub,
-    totalMonthlySavings: savingsPerSub * quantity,
-  };
+  return { smbMatch, savingsPerSub, totalMonthlySavings: savingsPerSub * quantity };
 }

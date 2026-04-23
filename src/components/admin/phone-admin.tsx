@@ -16,13 +16,7 @@ import {
 } from "lucide-react";
 import { PhoneProviderData, PhonePlanData } from "@/lib/phone-calculations";
 
-// ── Hjelpefunksjoner ──────────────────────────────────────────────
-
-function labelFromGB(dataGB: number): string {
-  return dataGB === -1 ? "Fri bruk" : `${dataGB}GB`;
-}
-
-// ── Abonnements-rad ───────────────────────────────────────────────
+// ── Plan row ──────────────────────────────────────────────────────────────────
 
 function PlanRow({
   plan,
@@ -53,16 +47,19 @@ function PlanRow({
   async function handleDelete() {
     if (!confirm(`Slett ${plan.label}?`)) return;
     setDeleting(true);
-    try {
-      await onDelete(plan.id);
-    } finally {
-      setDeleting(false);
-    }
+    try { await onDelete(plan.id); } finally { setDeleting(false); }
   }
 
   return (
     <div className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-slate-50 group">
-      <span className="text-sm text-slate-600 w-20 flex-shrink-0">{plan.label}</span>
+      <div className="flex items-center gap-1.5 w-32 flex-shrink-0">
+        <span className="text-sm text-slate-600">{plan.label}</span>
+        {plan.isExtraSim && (
+          <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+            SIM
+          </span>
+        )}
+      </div>
 
       {editing ? (
         <div className="flex items-center gap-2 flex-1">
@@ -75,9 +72,7 @@ function PlanRow({
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
-            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-              kr/mnd
-            </span>
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">kr/mnd</span>
           </div>
           <button
             onClick={handleSave}
@@ -122,7 +117,7 @@ function PlanRow({
   );
 }
 
-// ── Leverandørblokk ───────────────────────────────────────────────
+// ── Provider block ────────────────────────────────────────────────────────────
 
 function ProviderBlock({
   provider,
@@ -136,29 +131,52 @@ function ProviderBlock({
   provider: PhoneProviderData;
   onUpdatePlan: (planId: string, price: number) => Promise<void>;
   onDeletePlan: (planId: string) => Promise<void>;
-  onAddPlan: (providerId: string, label: string, dataGB: number, price: number) => Promise<void>;
+  onAddPlan: (providerId: string, label: string, dataGB: number, price: number, isExtraSim: boolean) => Promise<void>;
   onDeleteProvider: (providerId: string) => Promise<void>;
   onSetOurOffer: (providerId: string) => Promise<void>;
   onRefresh: () => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  // Regular plan form
   const [addingPlan, setAddingPlan] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newGB, setNewGB] = useState("");
   const [newPrice, setNewPrice] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+
+  // Ekstra SIM form
+  const [addingExtraSim, setAddingExtraSim] = useState(false);
+  const [extraSimPrice, setExtraSimPrice] = useState("");
+  const [savingSim, setSavingSim] = useState(false);
+
+  const regularPlans = provider.plans.filter((p) => !p.isExtraSim);
+  const extraSimPlan = provider.plans.find((p) => p.isExtraSim);
 
   async function handleAddPlan() {
     const price = parseFloat(newPrice);
     const gbVal = newLabel.toLowerCase() === "fri bruk" ? -1 : parseInt(newGB);
     if (!newLabel || isNaN(price) || (gbVal !== -1 && isNaN(gbVal))) return;
-    setSaving(true);
+    setSavingPlan(true);
     try {
-      await onAddPlan(provider.id, newLabel, gbVal, price);
+      await onAddPlan(provider.id, newLabel, gbVal, price, false);
       setNewLabel(""); setNewGB(""); setNewPrice(""); setAddingPlan(false);
       onRefresh();
     } finally {
-      setSaving(false);
+      setSavingPlan(false);
+    }
+  }
+
+  async function handleAddExtraSim() {
+    const price = parseFloat(extraSimPrice);
+    if (isNaN(price) || price < 0) return;
+    setSavingSim(true);
+    try {
+      await onAddPlan(provider.id, "Ekstra SIM", 0, price, true);
+      setExtraSimPrice(""); setAddingExtraSim(false);
+      onRefresh();
+    } finally {
+      setSavingSim(false);
     }
   }
 
@@ -166,7 +184,7 @@ function ProviderBlock({
 
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden">
-      {/* Leverandør-header */}
+      {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 bg-white cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={() => setOpen(!open)}
@@ -185,7 +203,8 @@ function ProviderBlock({
             </span>
           )}
           <span className="text-xs text-slate-400 ml-auto mr-3 flex-shrink-0">
-            {provider.plans.length} abonnementer
+            {regularPlans.length} abonnementer
+            {extraSimPlan && " · Ekstra SIM"}
           </span>
         </div>
         <button
@@ -200,106 +219,175 @@ function ProviderBlock({
         </button>
       </div>
 
-      {/* Abonnements-liste */}
+      {/* Expanded body */}
       {open && (
-        <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-3">
-          {provider.plans.length === 0 ? (
-            <p className="text-sm text-slate-400 italic py-2">Ingen abonnementer ennå</p>
-          ) : (
-            <div className="space-y-0.5">
-              {provider.plans.map((plan) => (
-                <PlanRow
-                  key={plan.id}
-                  plan={plan}
-                  onSave={onUpdatePlan}
-                  onDelete={async (id) => {
-                    await onDeletePlan(id);
-                    onRefresh();
-                  }}
-                />
-              ))}
-            </div>
-          )}
+        <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-3 space-y-4">
 
-          {!provider.isOurOffer && (
-            <button
-              onClick={() => onSetOurOffer(provider.id)}
-              className="mt-3 flex items-center gap-1.5 text-xs text-slate-500 hover:text-green-700 font-medium px-2 py-1 rounded-lg hover:bg-green-50 transition-colors border border-dashed border-slate-300 hover:border-green-300"
-            >
-              <Star className="w-3 h-3" />
-              Sett som vår referanseavtale
-            </button>
-          )}
-
-          {/* Legg til nytt abonnement */}
-          {addingPlan ? (
-            <div className="mt-3 p-3 bg-white rounded-lg border border-slate-200 space-y-2">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Nytt abonnement
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-xs text-slate-500 block mb-1">Navn (f.eks. "20GB" eller "Fri bruk")</label>
-                  <input
-                    type="text"
-                    value={newLabel}
-                    onChange={(e) => setNewLabel(e.target.value)}
-                    placeholder="20GB"
-                    className="input-field text-xs py-1.5"
+          {/* Regular plans */}
+          <div>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+              Abonnementer (GB-baserte)
+            </p>
+            {regularPlans.length === 0 ? (
+              <p className="text-sm text-slate-400 italic py-1">Ingen abonnementer ennå</p>
+            ) : (
+              <div className="space-y-0.5">
+                {regularPlans.map((plan) => (
+                  <PlanRow
+                    key={plan.id}
+                    plan={plan}
+                    onSave={onUpdatePlan}
+                    onDelete={async (id) => { await onDeletePlan(id); onRefresh(); }}
                   />
-                </div>
-                {!isFribruk && (
+                ))}
+              </div>
+            )}
+
+            {addingPlan ? (
+              <div className="mt-2 p-3 bg-white rounded-lg border border-slate-200 space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Nytt abonnement
+                </p>
+                <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-xs text-slate-500 block mb-1">Data (GB)</label>
+                    <label className="text-xs text-slate-500 block mb-1">Navn (f.eks. "20GB" eller "Fri bruk")</label>
                     <input
-                      type="number"
-                      value={newGB}
-                      onChange={(e) => setNewGB(e.target.value)}
-                      placeholder="20"
+                      type="text"
+                      value={newLabel}
+                      onChange={(e) => setNewLabel(e.target.value)}
+                      placeholder="20GB"
                       className="input-field text-xs py-1.5"
                     />
                   </div>
-                )}
-                <div>
-                  <label className="text-xs text-slate-500 block mb-1">Pris (kr/mnd)</label>
-                  <input
-                    type="number"
-                    value={newPrice}
-                    onChange={(e) => setNewPrice(e.target.value)}
-                    placeholder="399"
-                    className="input-field text-xs py-1.5"
-                  />
+                  {!isFribruk && (
+                    <div>
+                      <label className="text-xs text-slate-500 block mb-1">Data (GB)</label>
+                      <input
+                        type="number"
+                        value={newGB}
+                        onChange={(e) => setNewGB(e.target.value)}
+                        placeholder="20"
+                        className="input-field text-xs py-1.5"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-xs text-slate-500 block mb-1">Pris (kr/mnd)</label>
+                    <input
+                      type="number"
+                      value={newPrice}
+                      onChange={(e) => setNewPrice(e.target.value)}
+                      placeholder="399"
+                      className="input-field text-xs py-1.5"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddPlan}
+                    disabled={savingPlan}
+                    className="btn-primary py-1.5 text-xs flex items-center gap-1.5"
+                  >
+                    {savingPlan ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
+                    )}
+                    Lagre abonnement
+                  </button>
+                  <button
+                    onClick={() => { setAddingPlan(false); setNewLabel(""); setNewGB(""); setNewPrice(""); }}
+                    className="btn-secondary py-1.5 text-xs"
+                  >
+                    Avbryt
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleAddPlan}
-                  disabled={saving}
-                  className="btn-primary py-1.5 text-xs flex items-center gap-1.5"
-                >
-                  {saving ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Save className="w-3.5 h-3.5" />
-                  )}
-                  Lagre abonnement
-                </button>
-                <button
-                  onClick={() => { setAddingPlan(false); setNewLabel(""); setNewGB(""); setNewPrice(""); }}
-                  className="btn-secondary py-1.5 text-xs"
-                >
-                  Avbryt
-                </button>
-              </div>
+            ) : (
+              <button
+                onClick={() => setAddingPlan(true)}
+                className="mt-2 flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Legg til abonnement
+              </button>
+            )}
+          </div>
+
+          {/* Ekstra SIM section */}
+          <div className="pt-3 border-t border-slate-200">
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                Ekstra SIM
+              </p>
             </div>
-          ) : (
-            <button
-              onClick={() => setAddingPlan(true)}
-              className="mt-3 flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Legg til abonnement
-            </button>
+
+            {extraSimPlan ? (
+              <PlanRow
+                plan={extraSimPlan}
+                onSave={onUpdatePlan}
+                onDelete={async (id) => { await onDeletePlan(id); onRefresh(); }}
+              />
+            ) : addingExtraSim ? (
+              <div className="p-3 bg-white rounded-lg border border-blue-100 space-y-2">
+                <p className="text-xs text-slate-500">
+                  Ekstra SIM vises i abonnementslisten til selgerne. Prisen matches mot referanseleverandørens Ekstra SIM-pris.
+                </p>
+                <div className="flex items-end gap-2">
+                  <div className="w-40">
+                    <label className="text-xs text-slate-500 block mb-1">Pris (kr/mnd)</label>
+                    <input
+                      type="number"
+                      value={extraSimPrice}
+                      onChange={(e) => setExtraSimPrice(e.target.value)}
+                      placeholder="49"
+                      className="input-field text-xs py-1.5"
+                      autoFocus
+                      onKeyDown={(e) => e.key === "Enter" && handleAddExtraSim()}
+                    />
+                  </div>
+                  <button
+                    onClick={handleAddExtraSim}
+                    disabled={savingSim}
+                    className="btn-primary py-1.5 text-xs flex items-center gap-1.5"
+                  >
+                    {savingSim ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
+                    )}
+                    Lagre
+                  </button>
+                  <button
+                    onClick={() => { setAddingExtraSim(false); setExtraSimPrice(""); }}
+                    className="btn-secondary py-1.5 text-xs"
+                  >
+                    Avbryt
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAddingExtraSim(true)}
+                className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Legg til Ekstra SIM
+              </button>
+            )}
+          </div>
+
+          {/* Set as reference offer */}
+          {!provider.isOurOffer && (
+            <div className="pt-2">
+              <button
+                onClick={() => onSetOurOffer(provider.id)}
+                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-green-700 font-medium px-2 py-1 rounded-lg hover:bg-green-50 transition-colors border border-dashed border-slate-300 hover:border-green-300"
+              >
+                <Star className="w-3 h-3" />
+                Sett som vår referanseavtale
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -307,7 +395,7 @@ function ProviderBlock({
   );
 }
 
-// ── Hoved-komponent ───────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function PhoneAdmin({ initialProviders }: { initialProviders: PhoneProviderData[] }) {
   const [providers, setProviders] = useState<PhoneProviderData[]>(initialProviders);
@@ -328,10 +416,7 @@ export function PhoneAdmin({ initialProviders }: { initialProviders: PhoneProvid
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pricePerSub: price }),
     });
-    if (!res.ok) {
-      setGlobalError("Kunne ikke lagre pris");
-      return;
-    }
+    if (!res.ok) { setGlobalError("Kunne ikke lagre pris"); return; }
     await refresh();
   }
 
@@ -345,13 +430,14 @@ export function PhoneAdmin({ initialProviders }: { initialProviders: PhoneProvid
     providerId: string,
     label: string,
     dataGB: number,
-    price: number
+    price: number,
+    isExtraSim: boolean
   ) {
     setGlobalError("");
     const res = await fetch("/api/phone-plans", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ providerId, label, dataGB, pricePerSub: price }),
+      body: JSON.stringify({ providerId, label, dataGB, pricePerSub: price, isExtraSim }),
     });
     if (!res.ok) setGlobalError("Kunne ikke legge til abonnement");
   }
@@ -423,7 +509,6 @@ export function PhoneAdmin({ initialProviders }: { initialProviders: PhoneProvid
         ))}
       </div>
 
-      {/* Legg til ny leverandør */}
       {addingProvider ? (
         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
           <p className="text-sm font-semibold text-slate-700">Ny leverandør</p>
